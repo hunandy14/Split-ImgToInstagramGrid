@@ -20,19 +20,27 @@ def pad_to_4_5(img, bg_color=(255,255,255)):
     img = ImageOps.expand(img, (pad_w, pad_h, target_w-img.width-pad_w, target_h-img.height-pad_h), fill=bg_color)
     return img
 
-def split_to_grid(img, grid=3):
-    """將圖片切成3x3九宮格，從右下角開始"""
+def pad_to_square(img, bg_color=(255,255,255)):
+    """將圖片補白成正方形，內容居中"""
+    size = max(img.width, img.height)
+    pad_w = (size - img.width) // 2
+    pad_h = (size - img.height) // 2
+    return ImageOps.expand(img, (pad_w, pad_h, size-img.width-pad_w, size-img.height-pad_h), fill=bg_color)
+
+def split_to_grid(img, grid=3, bg_color=(255,255,255)):
+    """將圖片切成3x3九宮格，從右下角開始，並補白成正方形"""
     w, h = img.size
     tile_w, tile_h = w // grid, h // grid
     tiles = []
-    # 從右下角開始，由右到左，由下到上
     for row in range(grid-1, -1, -1):
         for col in range(grid-1, -1, -1):
             left = col * tile_w
             upper = row * tile_h
             right = left + tile_w
             lower = upper + tile_h
-            tiles.append(img.crop((left, upper, right, lower)))
+            tile = img.crop((left, upper, right, lower))
+            tile = pad_to_square(tile, bg_color)
+            tiles.append(tile)
     return tiles
 
 def merge_grid(tiles, grid=3):
@@ -61,7 +69,7 @@ def process_image(input_path, output_dir=None, bg_color=(255,255,255)):
     img_4_5.save(padded_path)
 
     # 切成九宮格
-    tiles = split_to_grid(img_4_5)
+    tiles = split_to_grid(img_4_5, bg_color=bg_color)
     for i, tile in enumerate(tiles):
         tile_path = os.path.join(output_dir, f'grid_{i+1}.jpg')
         tile.save(tile_path)
