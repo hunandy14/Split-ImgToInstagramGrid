@@ -1,2 +1,0 @@
---only-binary :all:
-Pillow==11.2.1 
