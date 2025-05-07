@@ -2,6 +2,12 @@
 
 這是一個可以將任意尺寸的圖片自動切成 Instagram 九宮格的 PowerShell 工具。工具會自動將圖片補白成指定比例，然後切成 3x3 的九宮格。
 
+快速使用
+
+```powershell
+irm bit.ly/sIGgrid|iex; sIGgrid "Image.jpg"
+```
+
 ## 功能特點
 
 - 支援正方形（1:1）和長方形（4:5）兩種輸出格式
@@ -14,26 +20,26 @@
 
 基本用法：
 ```powershell
-.\ig_grid.ps1 -Path "Image.jpg"
+irm bit.ly/sIGgrid|iex; sIGgrid -Path "Image.jpg"
 ```
 
 指定輸出目錄：
 ```powershell
-.\ig_grid.ps1 -Path "Image.jpg" -Output "output"
+irm bit.ly/sIGgrid|iex; -Path "Image.jpg" -Output "output"
 ```
 
 指定背景顏色（RGB）：
 ```powershell
-.\ig_grid.ps1 -Path "Image.jpg" -BgColor 255, 255, 255
+irm bit.ly/sIGgrid|iex; -Path "Image.jpg" -BgColor 255, 255, 255
 ```
 
 指定輸出格式：
 ```powershell
 # 正方形格式（1:1）
-.\ig_grid.ps1 -Path "Image.jpg" -Layout "square"
+irm bit.ly/sIGgrid|iex; -Path "Image.jpg" -Layout "square"
 
 # 長方形格式（4:5）
-.\ig_grid.ps1 -Path "Image.jpg" -Layout "rectangle"
+irm bit.ly/sIGgrid|iex; -Path "Image.jpg" -Layout "rectangle"
 ```
 
 參數說明：

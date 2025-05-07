@@ -3,6 +3,7 @@ Add-Type -AssemblyName System.Drawing
 
 # 將圖片切成IG九宮格
 function Split-ImgToInstagramGrid {
+    [Alias("sIGgrid")]
     param (
         [Parameter(Mandatory=$true, Position=0)]
         [string]$Path,
@@ -40,9 +41,9 @@ function Split-ImgToInstagramGrid {
     # 建立輸出目錄
     if (-not $Output) {
         $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-        $Output = "output_$timestamp"
+        $Output = Join-Path $env:TEMP "output_$timestamp"
     }
-        
+    
     # 將路徑轉換為絕對路徑
     $Path = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
     $Output = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Output)
@@ -151,3 +152,4 @@ function Split-ImgToInstagramGrid {
 } #
 # Split-ImgToInstagramGrid -Path "Image.jpg" -Output "output" -Layout "rectangle"
 # Split-ImgToInstagramGrid -Path "Image.jpg" -Output "output"
+# Split-ImgToInstagramGrid -Path "Image.jpg"
