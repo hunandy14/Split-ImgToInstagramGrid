@@ -13,7 +13,7 @@ function Split-ImgToInstagramGrid {
         [Alias("b")]
         [int[]]$BgColor = @(255, 255, 255),
 
-        [Alias("f")]
+        [Alias("l")]
         [ValidateSet("square", "rectangle")]
         [string]$Layout  = "square"
     )
