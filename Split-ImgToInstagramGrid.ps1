@@ -19,7 +19,7 @@ function Split-ImgToInstagramGrid {
     )
     
     # 偏移量 (防止計算誤差出現白邊)
-    $CUT_OFFSET = 5
+    $CUT_OFFSET = 4
     
     # 選擇格式參數
     switch ($Layout ) {
@@ -151,4 +151,5 @@ function Split-ImgToInstagramGrid {
         throw
     }
 } #
-Split-ImgToInstagramGrid -Path "Image.jpg" -Output "output"
+# Split-ImgToInstagramGrid -Path "Image.jpg" -Output "output" -Layout "rectangle"
+# Split-ImgToInstagramGrid -Path "Image.jpg" -Output "output"
