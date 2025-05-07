@@ -27,8 +27,8 @@ def pad_to_square(img, bg_color=(255,255,255)):
     pad_h = (size - img.height) // 2
     return ImageOps.expand(img, (pad_w, pad_h, size-img.width-pad_w, size-img.height-pad_h), fill=bg_color)
 
-def split_to_grid(img, grid=3, bg_color=(255,255,255)):
-    """將圖片切成3x3九宮格，從右下角開始，並補白成正方形"""
+def split_to_grid(img, grid=3, bg_color=(255,255,255), pad_to_square_flag=False):
+    """將圖片切成3x3九宮格，從右下角開始，可選擇是否補白成正方形"""
     w, h = img.size
     tile_w, tile_h = w // grid, h // grid
     tiles = []
@@ -39,7 +39,8 @@ def split_to_grid(img, grid=3, bg_color=(255,255,255)):
             right = left + tile_w
             lower = upper + tile_h
             tile = img.crop((left, upper, right, lower))
-            tile = pad_to_square(tile, bg_color)
+            if pad_to_square_flag:
+                tile = pad_to_square(tile, bg_color)
             tiles.append(tile)
     return tiles
 
@@ -52,7 +53,7 @@ def merge_grid(tiles, grid=3):
         new_img.paste(tile, (col*tile_w, row*tile_h))
     return new_img
 
-def process_image(input_path, output_dir=None, bg_color=(255,255,255)):
+def process_image(input_path, output_dir=None, bg_color=(255,255,255), pad_to_square_flag=False):
     """處理圖片並輸出九宮格"""
     # 建立輸出目錄
     if output_dir is None:
@@ -69,7 +70,7 @@ def process_image(input_path, output_dir=None, bg_color=(255,255,255)):
     img_4_5.save(padded_path)
 
     # 切成九宮格
-    tiles = split_to_grid(img_4_5, bg_color=bg_color)
+    tiles = split_to_grid(img_4_5, bg_color=bg_color, pad_to_square_flag=pad_to_square_flag)
     for i, tile in enumerate(tiles):
         tile_path = os.path.join(output_dir, f'grid_{i+1}.jpg')
         tile.save(tile_path)
@@ -87,10 +88,12 @@ def main():
     parser.add_argument('--output', '-o', help='輸出目錄')
     parser.add_argument('--bg-color', '-b', nargs=3, type=int, default=[255,255,255],
                       help='背景顏色 (RGB)，預設為白色 (255 255 255)')
+    parser.add_argument('--pad-to-square', '-p', action='store_true',
+                      help='將九宮格圖片補白成正方形')
     args = parser.parse_args()
 
     try:
-        output_dir = process_image(args.input, args.output, tuple(args.bg_color))
+        output_dir = process_image(args.input, args.output, tuple(args.bg_color), args.pad_to_square)
         print(f'處理完成！輸出目錄：{output_dir}')
         print('檔案列表：')
         for file in os.listdir(output_dir):
