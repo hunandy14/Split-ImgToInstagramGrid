@@ -144,8 +144,6 @@ function Split-ImgToInstagramGrid {
         $img.Dispose()
         
         Write-Host "處理完成！輸出目錄：$Output"
-        Write-Host "檔案列表："
-        Get-ChildItem $Output | ForEach-Object { Write-Host "- $($_.Name)" }
     }
     catch {
         throw
