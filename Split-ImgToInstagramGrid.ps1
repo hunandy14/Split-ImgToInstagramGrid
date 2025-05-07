@@ -81,31 +81,36 @@ function Split-ImgToInstagramGrid {
         $graphics.DrawImage($img, $padW, $padH, $img.Width, $img.Height)
         
         # 切成九宮格
-        $tileW = $targetW / 3
-        $tileH = $targetH / 3
+        $gridW = $targetW / 3
+        $gridH = $targetH / 3
         
         for ($row = 2; $row -ge 0; $row--) {
             for ($col = 2; $col -ge 0; $col--) {
-                $left = $col * $tileW
-                $upper = $row * $tileH
-                
-                # 根據指定比例補白
-                $targetRatio = $OUTPUT_RATIO_WIDTH / $OUTPUT_RATIO_HEIGHT
+                $left = $col * $gridW
+                $upper = $row * $gridH
                 
                 # 取長邊為基準
-                if ($tileW -gt $tileH) {
+                if ($gridW -gt $gridH) {
                     # 如果寬度較長，以寬度為基準
-                    $finalW = $tileW
-                    $finalH = $finalW / $targetRatio
+                    [int]$finalW = $gridW
+                    [int]$finalH = [Math]::Ceiling($finalW * $OUTPUT_RATIO_HEIGHT / $OUTPUT_RATIO_WIDTH)
                 } else {
                     # 如果高度較長，以高度為基準
-                    $finalW = $finalH * $targetRatio
-                    $finalH = $tileH
+                    [int]$finalH = $gridH
+                    [int]$finalW = [Math]::Ceiling($finalH * $OUTPUT_RATIO_WIDTH / $OUTPUT_RATIO_HEIGHT)
                 }
                 
-                # 確保尺寸為正偶數
-                $finalW = [Math]::Max(2, [Math]::Ceiling($finalW) -bxor 1)
-                $finalH = [Math]::Max(2, [Math]::Ceiling($finalH) -bxor 1)
+                # 確保寬高與原始尺寸的奇偶性一致
+                if ($gridW % 2) {
+                    if (-not ($finalW % 2)) { $finalW++ }
+                } else {
+                    if ($finalW % 2) { $finalW++ }
+                }
+                if ($gridH % 2) {
+                    if (-not ($finalH % 2)) { $finalH++ }
+                } else {
+                    if ($finalH % 2) { $finalH++ }
+                }
                 
                 # 建立新的畫布
                 $tile = New-Object System.Drawing.Bitmap($finalW, $finalH)
@@ -113,13 +118,13 @@ function Split-ImgToInstagramGrid {
                 $tileGraphics.Clear([System.Drawing.Color]::FromArgb($BgColor[0], $BgColor[1], $BgColor[2]))
                 
                 # 計算置中位置
-                $padW = [Math]::Max(0, [Math]::Floor(($finalW - $tileW) / 2))
-                $padH = [Math]::Max(0, [Math]::Floor(($finalH - $tileH) / 2))
+                $padW = [Math]::Max(0, [Math]::Floor(($finalW - $gridW) / 2))
+                $padH = [Math]::Max(0, [Math]::Floor(($finalH - $gridH) / 2))
                 
                 # 複製到新畫布
                 $tileGraphics.DrawImage($newImg, 
-                    [System.Drawing.Rectangle]::new($padW, $padH, $tileW, $tileH),
-                    [System.Drawing.Rectangle]::new($left, $upper, $tileW, $tileH),
+                    [System.Drawing.Rectangle]::new($padW, $padH, $gridW, $gridH),
+                    [System.Drawing.Rectangle]::new($left, $upper, $gridW, $gridH),
                     [System.Drawing.GraphicsUnit]::Pixel)
                 
                 # 儲存九宮格圖片
@@ -145,4 +150,5 @@ function Split-ImgToInstagramGrid {
     catch {
         throw
     }
-} # Split-ImgToInstagramGrid -Path "Image.jpg" -Output "output"
+} #
+Split-ImgToInstagramGrid -Path "Image.jpg" -Output "output"
