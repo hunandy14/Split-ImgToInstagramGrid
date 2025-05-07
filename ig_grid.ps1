@@ -1,4 +1,3 @@
-
 # 載入 System.Drawing 組件
 Add-Type -AssemblyName System.Drawing
 
@@ -9,13 +8,13 @@ function Convert-ToInstagramGrid {
         [string]$Path,
         
         [Alias("o")]
-        [string]$Output = "output",
+        [string]$Output,
         
         [Alias("b")]
         [int[]]$BgColor = @(255, 255, 255),
         
-        [Alias("p")]
-        [switch]$PadToSquare
+        [Alias("k")]
+        [switch]$KeepOriginalRatio
     )
     
     # Instagram 首頁顯示比例常數
@@ -23,21 +22,23 @@ function Convert-ToInstagramGrid {
     $IG_PREVIEW_HEIGHT = 410.223
     $IG_PREVIEW_RATIO = $IG_PREVIEW_HEIGHT / $IG_PREVIEW_WIDTH
     
-    # 將輸入路徑轉換為絕對路徑
-    $Path = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
-    $Output = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Output)
-    
-    # 檢查輸入檔案是否存在
-    if (-not (Test-Path $Path)) {
-        throw "輸入檔案不存在：$Path"
-    }
-
     # 建立輸出目錄
     if (-not $Output) {
         $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
         $Output = "output_$timestamp"
     }
+        
+    # 將路徑轉換為絕對路徑
+    $Path = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
+    $Output = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Output)
+    
+    # 建立輸出目錄
     New-Item -ItemType Directory -Force -Path $Output | Out-Null
+    
+    # 檢查輸入檔案是否存在
+    if (-not (Test-Path $Path)) {
+        throw "輸入檔案不存在：$Path"
+    }
 
     try {
         # 讀取圖片
@@ -85,8 +86,8 @@ function Convert-ToInstagramGrid {
                     [System.Drawing.Rectangle]::new($left, $upper, $tileW, $tileH),
                     [System.Drawing.GraphicsUnit]::Pixel)
                 
-                # 如果需要補白成正方形
-                if ($PadToSquare) {
+                # 預設補白成正方形，除非指定保持原始比例
+                if (-not $KeepOriginalRatio) {
                     $size = [Math]::Max($tileW, $tileH)
                     $squareTile = New-Object System.Drawing.Bitmap($size, $size)
                     $squareGraphics = [System.Drawing.Graphics]::FromImage($squareTile)
@@ -119,9 +120,9 @@ function Convert-ToInstagramGrid {
         Write-Host "處理完成！輸出目錄：$Output"
         Write-Host "檔案列表："
         Get-ChildItem $Output | ForEach-Object { Write-Host "- $($_.Name)" }
-                
     }
     catch {
         throw "處理圖片時發生錯誤：$_"
     }
-} # Convert-ToInstagramGrid -Path Image.jpg
+} #
+Convert-ToInstagramGrid -Path "Image.jpg" -Output "output"
