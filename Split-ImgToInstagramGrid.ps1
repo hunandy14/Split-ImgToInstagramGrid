@@ -52,7 +52,7 @@ function Split-ImgToInstagramGrid {
     New-Item -ItemType Directory -Force -Path $Output | Out-Null
     
     # 檢查輸入檔案是否存在
-    if (-not (Test-Path $Path)) { throw "輸入檔案不存在：$Path" }
+    if (-not (Test-Path $Path)) { throw "Input file does not exist: $Path" }
 
     try {
         # 讀取圖片
@@ -144,7 +144,7 @@ function Split-ImgToInstagramGrid {
         $newImg.Dispose()
         $img.Dispose()
         
-        Write-Host "處理完成！輸出目錄：$Output"
+        Write-Host "Processing completed! Output directory: $Output"
     }
     catch {
         throw
