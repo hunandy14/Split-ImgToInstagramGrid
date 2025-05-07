@@ -12,19 +12,36 @@ function Convert-ToInstagramGrid {
         
         [Alias("b")]
         [int[]]$BgColor = @(255, 255, 255),
-        
-        [Alias("k")]
-        [switch]$KeepOriginalRatio,
 
-        [Alias("p")]
-        [int[]]$Padding = @(0, 0, 0, 0)
+        [Alias("f")]
+        [ValidateSet("square", "rectangle")]
+        [string]$Format = "square"
     )
     
-    # Instagram 首頁顯示比例常數
-    # $IG_PREVIEW_WIDTH = 307.670 + 3.5
-    # $IG_PREVIEW_HEIGHT = 410.223
-    $IG_PREVIEW_WIDTH = 1012.5
-    $IG_PREVIEW_HEIGHT = 1350
+    # 偏移量 (防止計算誤差出現白邊)
+    $CUT_OFFSET = 5
+    
+    # 格式參數
+    $FORMATS = @{
+        "square" = @{
+            CUT_RADIO_WIDTH = 810 + $CUT_OFFSET
+            CUT_RADIO_HEIGHT = 1080
+            OUTPUT_RATIO_WIDTH = 1
+            OUTPUT_RATIO_HEIGHT = 1
+        }
+        "rectangle" = @{
+            CUT_RADIO_WIDTH = 1012.5 + $CUT_OFFSET
+            CUT_RADIO_HEIGHT = 1350
+            OUTPUT_RATIO_WIDTH = 4
+            OUTPUT_RATIO_HEIGHT = 5
+        }
+    }
+    
+    # 選擇格式參數
+    $CUT_RADIO_WIDTH = $FORMATS[$Format].CUT_RADIO_WIDTH
+    $CUT_RADIO_HEIGHT = $FORMATS[$Format].CUT_RADIO_HEIGHT
+    $OUTPUT_RATIO_WIDTH = $FORMATS[$Format].OUTPUT_RATIO_WIDTH
+    $OUTPUT_RATIO_HEIGHT = $FORMATS[$Format].OUTPUT_RATIO_HEIGHT
     
     # 建立輸出目錄
     if (-not $Output) {
@@ -40,18 +57,7 @@ function Convert-ToInstagramGrid {
     New-Item -ItemType Directory -Force -Path $Output | Out-Null
     
     # 檢查輸入檔案是否存在
-    if (-not (Test-Path $Path)) {
-        throw "輸入檔案不存在：$Path"
-    }
-
-    # 處理補邊參數
-    $paddingValues = switch ($Padding.Count) {
-        1 { @($Padding[0], $Padding[0], $Padding[0], $Padding[0]) }
-        2 { @($Padding[0], $Padding[1], $Padding[0], $Padding[1]) }
-        3 { @($Padding[0], $Padding[1], $Padding[2], $Padding[1]) }
-        4 { $Padding }
-        default { @(0, 0, 0, 0) }
-    }
+    if (-not (Test-Path $Path)) { throw "輸入檔案不存在：$Path" }
 
     try {
         # 讀取圖片
@@ -59,7 +65,11 @@ function Convert-ToInstagramGrid {
         
         # 計算目標尺寸
         $targetW = $img.Width
-        $targetH = [Math]::Ceiling($targetW * $IG_PREVIEW_HEIGHT / $IG_PREVIEW_WIDTH)
+        $targetH = [Math]::Ceiling($targetW * $CUT_RADIO_HEIGHT / $CUT_RADIO_WIDTH)
+        
+        # 確保是3的倍數
+        $targetW = $targetW - ($targetW % 3)
+        $targetH = $targetH - ($targetH % 3)
         
         # 如果原始高度已經超過目標高度，則交換寬高
         if ($img.Height -gt $targetH) { $targetW, $targetH = $targetH, $targetW }
@@ -85,53 +95,47 @@ function Convert-ToInstagramGrid {
                 $left = $col * $tileW
                 $upper = $row * $tileH
                 
-                # 建立九宮格圖片
-                $tile = New-Object System.Drawing.Bitmap($tileW, $tileH)
+                # 根據指定比例補白
+                $targetRatio = $OUTPUT_RATIO_WIDTH / $OUTPUT_RATIO_HEIGHT
+                
+                # 取長邊為基準
+                if ($tileW -gt $tileH) {
+                    # 如果寬度較長，以寬度為基準
+                    $finalW = $tileW
+                    $finalH = $finalW / $targetRatio
+                } else {
+                    # 如果高度較長，以高度為基準
+                    $finalW = $finalH * $targetRatio
+                    $finalH = $tileH
+                }
+                
+                # 確保尺寸為正偶數
+                $finalW = [Math]::Max(2, [Math]::Ceiling($finalW) -bxor 1)
+                $finalH = [Math]::Max(2, [Math]::Ceiling($finalH) -bxor 1)
+                
+                # 建立新的畫布
+                $tile = New-Object System.Drawing.Bitmap($finalW, $finalH)
                 $tileGraphics = [System.Drawing.Graphics]::FromImage($tile)
                 $tileGraphics.Clear([System.Drawing.Color]::FromArgb($BgColor[0], $BgColor[1], $BgColor[2]))
                 
-                # 複製對應區域
+                # 計算置中位置
+                $padW = [Math]::Max(0, [Math]::Floor(($finalW - $tileW) / 2))
+                $padH = [Math]::Max(0, [Math]::Floor(($finalH - $tileH) / 2))
+                
+                # 複製到新畫布
                 $tileGraphics.DrawImage($newImg, 
-                    [System.Drawing.Rectangle]::new(0, 0, $tileW, $tileH),
+                    [System.Drawing.Rectangle]::new($padW, $padH, $tileW, $tileH),
                     [System.Drawing.Rectangle]::new($left, $upper, $tileW, $tileH),
                     [System.Drawing.GraphicsUnit]::Pixel)
-                
-                # 預設補白成正方形，除非指定保持原始比例
-                if (-not $KeepOriginalRatio) {
-                    $size = [Math]::Max($tileW, $tileH)
-                    $squareTile = New-Object System.Drawing.Bitmap($size, $size)
-                    $squareGraphics = [System.Drawing.Graphics]::FromImage($squareTile)
-                    $squareGraphics.Clear([System.Drawing.Color]::FromArgb($BgColor[0], $BgColor[1], $BgColor[2]))
-                    
-                    $padW = ($size - $tileW) / 2
-                    $padH = ($size - $tileH) / 2
-                    $squareGraphics.DrawImage($tile, $padW, $padH, $tileW, $tileH)
-                    
-                    $tile.Dispose()
-                    $tile = $squareTile
-                }
-
-                # 加入補邊
-                $finalWidth = $tile.Width + $paddingValues[1] + $paddingValues[3]  # 右 + 左
-                $finalHeight = $tile.Height + $paddingValues[0] + $paddingValues[2]  # 上 + 下
-                
-                $finalTile = New-Object System.Drawing.Bitmap($finalWidth, $finalHeight)
-                $finalGraphics = [System.Drawing.Graphics]::FromImage($finalTile)
-                $finalGraphics.Clear([System.Drawing.Color]::FromArgb($BgColor[0], $BgColor[1], $BgColor[2]))
-                
-                # 繪製原始圖片到補邊後的畫布上
-                $finalGraphics.DrawImage($tile, $paddingValues[3], $paddingValues[0], $tile.Width, $tile.Height)
                 
                 # 儲存九宮格圖片
                 $tileNum = (2 - $row) * 3 + (2 - $col) + 1
                 $tilePath = Join-Path $Output "grid_$tileNum.jpg"
-                $finalTile.Save($tilePath, [System.Drawing.Imaging.ImageFormat]::Jpeg)
+                $tile.Save($tilePath, [System.Drawing.Imaging.ImageFormat]::Jpeg)
                 
                 # 釋放資源
-                $tile.Dispose()
                 $tileGraphics.Dispose()
-                $finalTile.Dispose()
-                $finalGraphics.Dispose()
+                $tile.Dispose()
             }
         }
         
@@ -145,8 +149,7 @@ function Convert-ToInstagramGrid {
         Get-ChildItem $Output | ForEach-Object { Write-Host "- $($_.Name)" }
     }
     catch {
-        throw "處理圖片時發生錯誤：$_"
+        throw
     }
-}
-
-Convert-ToInstagramGrid -Path "Image.jpg" -Output "output" -KeepOriginalRatio -Padding @(0, 33.5, 0)
+} # 
+Convert-ToInstagramGrid -Path "Image.jpg" -Output "output"
