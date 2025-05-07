@@ -4,15 +4,15 @@ import argparse
 from datetime import datetime
 
 def pad_to_4_5(img, bg_color=(255,255,255)):
-    """將圖片補白成4:5比例，保持原始解析度"""
-    # 計算目標尺寸（保持原始寬度，高度按4:5比例）
+    """將圖片補白成 Instagram 首頁顯示比例 (約 1.346:1)，保持原始解析度"""
+    # 計算目標尺寸（保持原始寬度，高度按 1.346:1 比例）
     target_w = img.width
-    target_h = int(target_w * 5 / 4)  # 4:5比例
+    target_h = int(target_w * 1.346)  # Instagram 首頁顯示比例
     
     # 如果原始高度已經超過目標高度，則以高度為基準
     if img.height > target_h:
         target_h = img.height
-        target_w = int(target_h * 4 / 5)  # 4:5比例
+        target_w = int(target_h / 1.346)  # Instagram 首頁顯示比例
     
     # 補白
     pad_w = (target_w - img.width) // 2
