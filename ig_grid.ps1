@@ -15,33 +15,27 @@ function Convert-ToInstagramGrid {
 
         [Alias("f")]
         [ValidateSet("square", "rectangle")]
-        [string]$Format = "square"
+        [string]$Layout  = "square"
     )
     
     # 偏移量 (防止計算誤差出現白邊)
     $CUT_OFFSET = 5
     
-    # 格式參數
-    $FORMATS = @{
-        "square" = @{
-            CUT_RADIO_WIDTH = 810 + $CUT_OFFSET
-            CUT_RADIO_HEIGHT = 1080
-            OUTPUT_RATIO_WIDTH = 1
-            OUTPUT_RATIO_HEIGHT = 1
+    # 選擇格式參數
+    switch ($Layout ) {
+        "square" {
+            $CUT_RADIO_WIDTH = 810 + $CUT_OFFSET
+            $CUT_RADIO_HEIGHT = 1080
+            $OUTPUT_RATIO_WIDTH = 1
+            $OUTPUT_RATIO_HEIGHT = 1
         }
-        "rectangle" = @{
-            CUT_RADIO_WIDTH = 1012.5 + $CUT_OFFSET
-            CUT_RADIO_HEIGHT = 1350
-            OUTPUT_RATIO_WIDTH = 4
-            OUTPUT_RATIO_HEIGHT = 5
+        "rectangle" {
+            $CUT_RADIO_WIDTH = 1012.5 + $CUT_OFFSET
+            $CUT_RADIO_HEIGHT = 1350
+            $OUTPUT_RATIO_WIDTH = 4
+            $OUTPUT_RATIO_HEIGHT = 5
         }
     }
-    
-    # 選擇格式參數
-    $CUT_RADIO_WIDTH = $FORMATS[$Format].CUT_RADIO_WIDTH
-    $CUT_RADIO_HEIGHT = $FORMATS[$Format].CUT_RADIO_HEIGHT
-    $OUTPUT_RATIO_WIDTH = $FORMATS[$Format].OUTPUT_RATIO_WIDTH
-    $OUTPUT_RATIO_HEIGHT = $FORMATS[$Format].OUTPUT_RATIO_HEIGHT
     
     # 建立輸出目錄
     if (-not $Output) {
@@ -151,5 +145,4 @@ function Convert-ToInstagramGrid {
     catch {
         throw
     }
-} # 
-Convert-ToInstagramGrid -Path "Image.jpg" -Output "output"
+} # Convert-ToInstagramGrid -Path "Image.jpg" -Output "output"
