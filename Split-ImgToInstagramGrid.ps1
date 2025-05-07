@@ -2,7 +2,7 @@
 Add-Type -AssemblyName System.Drawing
 
 # 將圖片切成IG九宮格
-function Convert-ToInstagramGrid {
+function Split-ImgToInstagramGrid {
     param (
         [Parameter(Mandatory=$true, Position=0)]
         [string]$Path,
@@ -145,4 +145,4 @@ function Convert-ToInstagramGrid {
     catch {
         throw
     }
-} # Convert-ToInstagramGrid -Path "Image.jpg" -Output "output"
+} # Split-ImgToInstagramGrid -Path "Image.jpg" -Output "output"
