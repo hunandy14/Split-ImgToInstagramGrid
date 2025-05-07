@@ -62,15 +62,18 @@ function Split-ImgToInstagramGrid {
         $targetW = $img.Width
         $targetH = [Math]::Ceiling($targetW * $CUT_RADIO_HEIGHT / $CUT_RADIO_WIDTH)
         
+        # 如果原始高度已經超過目標高度，則以高度為基準重新計算
+        if ($img.Height -gt $targetH) {
+            $targetH = $img.Height
+            $targetW = [Math]::Ceiling($targetH * $CUT_RADIO_WIDTH / $CUT_RADIO_HEIGHT)
+        }
+        
         # 確保是3的倍數
         $targetW = $targetW - ($targetW % 3)
         $targetH = $targetH - ($targetH % 3)
         
-        # 如果原始高度已經超過目標高度，則交換寬高
-        if ($img.Height -gt $targetH) { $targetW, $targetH = $targetH, $targetW }
-        
         # 建立新的圖片並補白
-        $newImg = New-Object System.Drawing.Bitmap($targetW, $targetH)
+        $newImg = New-Object System.Drawing.Bitmap($targetW, $targetH, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
         $graphics = [System.Drawing.Graphics]::FromImage($newImg)
         $graphics.Clear([System.Drawing.Color]::FromArgb($BgColor[0], $BgColor[1], $BgColor[2]))
         
@@ -153,4 +156,4 @@ function Split-ImgToInstagramGrid {
 } #
 # Split-ImgToInstagramGrid -Path "Image.jpg" -Output "output" -Layout "rectangle"
 # Split-ImgToInstagramGrid -Path "Image.jpg" -Output "output"
-# Split-ImgToInstagramGrid -Path "Image.jpg"
+# Split-ImgToInstagramGrid -Path "Image2.jpg" -Output "output"
