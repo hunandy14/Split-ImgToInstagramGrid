@@ -8,9 +8,16 @@ IG_PREVIEW_WIDTH = 307.670
 IG_PREVIEW_HEIGHT = 410.223
 IG_PREVIEW_RATIO = IG_PREVIEW_HEIGHT / IG_PREVIEW_WIDTH
 
-def pad_to_4_5(img, bg_color=(255,255,255)):
-    """將圖片補白成 Instagram 首頁顯示比例 (307.670:410.223)，保持原始解析度"""
-    # 計算目標尺寸（保持原始寬度，高度按 Instagram 首頁顯示比例）
+def process_image(input_path, output_dir=None, bg_color=(255,255,255), pad_to_square_flag=False):
+    """處理圖片並輸出九宮格"""
+    # 建立輸出目錄
+    if output_dir is None:
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        output_dir = f'output_{timestamp}'
+    os.makedirs(output_dir, exist_ok=True)
+
+    # 讀取圖片並補白成 Instagram 首頁顯示比例
+    img = Image.open(input_path)
     target_w = img.width
     target_h = int(target_w * IG_PREVIEW_RATIO)
     
@@ -23,67 +30,29 @@ def pad_to_4_5(img, bg_color=(255,255,255)):
     pad_w = (target_w - img.width) // 2
     pad_h = (target_h - img.height) // 2
     img = ImageOps.expand(img, (pad_w, pad_h, target_w-img.width-pad_w, target_h-img.height-pad_h), fill=bg_color)
-    return img
 
-def pad_to_square(img, bg_color=(255,255,255)):
-    """將圖片補白成正方形，內容居中"""
-    size = max(img.width, img.height)
-    pad_w = (size - img.width) // 2
-    pad_h = (size - img.height) // 2
-    return ImageOps.expand(img, (pad_w, pad_h, size-img.width-pad_w, size-img.height-pad_h), fill=bg_color)
-
-def split_to_grid(img, grid=3, bg_color=(255,255,255), pad_to_square_flag=False):
-    """將圖片切成3x3九宮格，從右下角開始，可選擇是否補白成正方形"""
+    # 切成九宮格
     w, h = img.size
-    tile_w, tile_h = w // grid, h // grid
-    tiles = []
-    for row in range(grid-1, -1, -1):
-        for col in range(grid-1, -1, -1):
+    tile_w, tile_h = w // 3, h // 3
+    for row in range(2, -1, -1):
+        for col in range(2, -1, -1):
             left = col * tile_w
             upper = row * tile_h
             right = left + tile_w
             lower = upper + tile_h
             tile = img.crop((left, upper, right, lower))
+            
+            # 如果需要補白成正方形
             if pad_to_square_flag:
-                tile = pad_to_square(tile, bg_color)
-            tiles.append(tile)
-    return tiles
-
-def merge_grid(tiles, grid=3):
-    """將九宮格圖片合併回一張大圖"""
-    tile_w, tile_h = tiles[0].size
-    new_img = Image.new('RGB', (tile_w*grid, tile_h*grid), (255,255,255))
-    for idx, tile in enumerate(tiles):
-        row, col = divmod(idx, grid)
-        new_img.paste(tile, (col*tile_w, row*tile_h))
-    return new_img
-
-def process_image(input_path, output_dir=None, bg_color=(255,255,255), pad_to_square_flag=False):
-    """處理圖片並輸出九宮格"""
-    # 建立輸出目錄
-    if output_dir is None:
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_dir = f'output_{timestamp}'
-    os.makedirs(output_dir, exist_ok=True)
-
-    # 讀取並處理圖片
-    img = Image.open(input_path)
-    img_4_5 = pad_to_4_5(img, bg_color)
-    
-    # 儲存補白後的圖片
-    padded_path = os.path.join(output_dir, 'padded.jpg')
-    img_4_5.save(padded_path)
-
-    # 切成九宮格
-    tiles = split_to_grid(img_4_5, bg_color=bg_color, pad_to_square_flag=pad_to_square_flag)
-    for i, tile in enumerate(tiles):
-        tile_path = os.path.join(output_dir, f'grid_{i+1}.jpg')
-        tile.save(tile_path)
-
-    # 驗證：拼回一張大圖
-    merged = merge_grid(tiles)
-    merged_path = os.path.join(output_dir, 'merged.jpg')
-    merged.save(merged_path)
+                size = max(tile.width, tile.height)
+                pad_w = (size - tile.width) // 2
+                pad_h = (size - tile.height) // 2
+                tile = ImageOps.expand(tile, (pad_w, pad_h, size-tile.width-pad_w, size-tile.height-pad_h), fill=bg_color)
+            
+            # 儲存九宮格圖片
+            tile_num = (2-row) * 3 + (2-col) + 1
+            tile_path = os.path.join(output_dir, f'grid_{tile_num}.jpg')
+            tile.save(tile_path)
 
     return output_dir
 
