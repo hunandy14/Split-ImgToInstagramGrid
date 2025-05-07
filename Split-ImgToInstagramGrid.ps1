@@ -144,7 +144,8 @@ function Split-ImgToInstagramGrid {
         $newImg.Dispose()
         $img.Dispose()
         
-        Write-Host "Processing completed! Output directory: $Output"
+        Write-Host "completed! Output directory ($(Split-Path -Path $Path -Leaf)):" -ForegroundColor Green
+        Write-Host "  $Output" -ForegroundColor DarkCyan
     }
     catch {
         throw
