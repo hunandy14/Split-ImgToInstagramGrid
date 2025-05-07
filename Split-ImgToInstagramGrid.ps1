@@ -42,6 +42,7 @@ function Split-ImgToInstagramGrid {
     if (-not $Output) {
         $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
         $Output = Join-Path $env:TEMP "output_$timestamp"
+        $OpenFloder = $true
     }
     
     # 將路徑轉換為絕對路徑
@@ -149,6 +150,8 @@ function Split-ImgToInstagramGrid {
         
         Write-Host "completed! Output directory ($(Split-Path -Path $Path -Leaf)):" -ForegroundColor Green
         Write-Host "  $Output" -ForegroundColor DarkCyan
+        
+        if ($OpenFloder) { Start-Process "explorer.exe" $Output }
     }
     catch {
         throw
@@ -156,4 +159,4 @@ function Split-ImgToInstagramGrid {
 } #
 # Split-ImgToInstagramGrid -Path "Image.jpg" -Output "output" -Layout "rectangle"
 # Split-ImgToInstagramGrid -Path "Image.jpg" -Output "output"
-# Split-ImgToInstagramGrid -Path "Image2.jpg" -Output "output"
+# Split-ImgToInstagramGrid -Path "Image2.jpg"
