@@ -1,3 +1,3 @@
-@echo off
-set "1=%~1"
-powershell -NoExit -Command "&{ irm bit.ly/sIGgrid | iex; sIGgrid $env:1 }"
+@echo off & set "1=%~1"
+powershell -nop "irm bit.ly/sIGgrid|iex; sIGgrid $env:1"
+exit /b %errorlevel%
