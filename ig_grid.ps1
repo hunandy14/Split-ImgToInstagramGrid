@@ -18,9 +18,8 @@ function Convert-ToInstagramGrid {
     )
     
     # Instagram 首頁顯示比例常數
-    $IG_PREVIEW_WIDTH = 307.670
+    $IG_PREVIEW_WIDTH = 307.670 + 3.5
     $IG_PREVIEW_HEIGHT = 410.223
-    $IG_PREVIEW_RATIO = $IG_PREVIEW_HEIGHT / $IG_PREVIEW_WIDTH
     
     # 建立輸出目錄
     if (-not $Output) {
@@ -46,13 +45,10 @@ function Convert-ToInstagramGrid {
         
         # 計算目標尺寸
         $targetW = $img.Width
-        $targetH = [int]($targetW * $IG_PREVIEW_RATIO)
+        $targetH = [Math]::Ceiling($targetW * $IG_PREVIEW_HEIGHT / $IG_PREVIEW_WIDTH)
         
-        # 如果原始高度已經超過目標高度，則以高度為基準
-        if ($img.Height -gt $targetH) {
-            $targetH = $img.Height
-            $targetW = [int]($targetH / $IG_PREVIEW_RATIO)
-        }
+        # 如果原始高度已經超過目標高度，則交換寬高
+        if ($img.Height -gt $targetH) { $targetW, $targetH = $targetH, $targetW }
         
         # 建立新的圖片並補白
         $newImg = New-Object System.Drawing.Bitmap($targetW, $targetH)
@@ -124,5 +120,4 @@ function Convert-ToInstagramGrid {
     catch {
         throw "處理圖片時發生錯誤：$_"
     }
-} #
-Convert-ToInstagramGrid -Path "Image.jpg" -Output "output"
+} # Convert-ToInstagramGrid -Path "Image.jpg" -Output "output"
